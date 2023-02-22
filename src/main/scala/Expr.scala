@@ -1,5 +1,6 @@
 enum Expr:
-  case Var(i: Int)
+  case Var(s: Int)
+  case Symbol(s: String)
   case App(f: Expr, a: Expr)
 
 object Expr:
@@ -8,32 +9,22 @@ object Expr:
 
 object ExprExamples:
   import Expr.*
-  val f: Expr = Var(1)
-  val g: Expr = Var(2)
-  val h: Expr = Var(3)
+  val f: Expr = Symbol("f")
+  val g: Expr = Symbol("g")
+  val h: Expr = Symbol("h")
 
-  val a: Expr = Var(10)
-  val b: Expr = Var(11)
-  val c: Expr = Var(12)
+  val a: Expr = Symbol("a")
+  val b: Expr = Symbol("b")
+  val c: Expr = Symbol("c")
 
-  val A: Expr = Var(20)
-  val B: Expr = Var(21)
-  val C: Expr = Var(22)
+  val A: Expr = Symbol("A")
+  val B: Expr = Symbol("B")
+  val C: Expr = Symbol("C")
 
-  val `=`: Expr = Var(100)
-  val `,`: Expr = Var(101)
-  val `:`: Expr = Var(102)
-  val `-->`: Expr = Var(103)
+  val $x: Expr = Var(1)
+  val $y: Expr = Var(2)
+  val $z: Expr = Var(3)
 
-  val _1: Expr = Var(-1)
-  val _2: Expr = Var(-2)
-  val _3: Expr = Var(-3)
-
-  val $: Expr = Var(0)
-
-  val $x: Expr = Var(-100)
-  val $y: Expr = Var(-200)
-  val $z: Expr = Var(-300)
 
 @main def m =
   import Unification.*

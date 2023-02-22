@@ -15,9 +15,9 @@ case class Knowledge(map: Map[Int, Expr]):
    * If `t` is a var or contains a var look it up recursively.
    */
   private def walk(t: Expr): Option[Expr] = t match
-    case Expr.Var(i) if i < 0 => lookup(i)
+    case Expr.Var(s) => lookup(s)
     case Expr.App(f, a) => Some(Expr.App(walk(f).getOrElse(f), walk(a).getOrElse(a)))
-    case v => Some(v)
+    case t: Expr.Symbol => Some(t)
 
 object Knowledge:
   def empty = Knowledge(Map.empty[Int, Expr])

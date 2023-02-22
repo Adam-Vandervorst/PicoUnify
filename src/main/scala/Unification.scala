@@ -10,14 +10,14 @@ object Unification:
    * Unify t1 with t2 using/improving the passed knowledge.
    */
   def unifyWith(t1: Expr, t2: Expr, knowledge: Knowledge): Option[Knowledge] = (t1, t2) match
-    case (Expr.Var(i), Expr.Var(j)) if i < 0 && j < 0 =>
+    case (Expr.Var(i), Expr.Var(j)) =>
       if i == j then Some(knowledge)
       else bind(i, t2, knowledge) // left-biased binding
-    case (Expr.Var(i), _) if i < 0 =>
+    case (Expr.Var(i), _) =>
       bind(i, t2, knowledge)
-    case (_, Expr.Var(j)) if j < 0 =>
+    case (_, Expr.Var(j)) =>
       bind(j, t1, knowledge)
-    case (Expr.Var(i), Expr.Var(j)) if i > 0 && j > 0 =>
+    case (Expr.Symbol(i), Expr.Symbol(j)) =>
       Some(knowledge)
     case (Expr.App(lf, la), Expr.App(rf, ra)) =>
       for kf <- unifyWith(lf, rf, knowledge)
@@ -50,7 +50,7 @@ object Unification:
 
     // v may be aliased to some other variable
     val aliased = knowledge.lookup(v) match
-      case Some(Expr.Var(i)) if i < 0 => i
+      case Some(Expr.Var(i)) => i
       case _ => v
 
     reachlist(vars(t)).contains(aliased)
@@ -58,6 +58,6 @@ object Unification:
 
   private def vars(t: Expr): List[Int] = t match
     case Expr.App(f, a) => vars(f) ::: vars(a)
-    case Expr.Var(i) if i < 0 => i::Nil
+    case Expr.Var(i) => i::Nil
     case _ => Nil
 end Unification
