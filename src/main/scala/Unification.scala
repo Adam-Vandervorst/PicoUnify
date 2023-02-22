@@ -1,32 +1,33 @@
 object Unification:
-  /*
+  /**
    * Unify t1 with t2 assuming no knowledge.
    */
   extension (t1: Expr)
     infix def unify(t2: Expr): Option[Knowledge] =
       unifyWith(t1, t2, Knowledge.empty)
 
-  /*
+  /**
    * Unify t1 with t2 using/improving the passed knowledge.
    */
   def unifyWith(t1: Expr, t2: Expr, knowledge: Knowledge): Option[Knowledge] = (t1, t2) match
     case (Expr.Var(i), Expr.Var(j)) =>
-      if i == j then Some(knowledge)
+      if i == j then Some(knowledge) // does global, variable equality
       else bind(i, t2, knowledge) // left-biased binding
     case (Expr.Var(i), _) =>
       bind(i, t2, knowledge)
     case (_, Expr.Var(j)) =>
       bind(j, t1, knowledge)
     case (Expr.Symbol(i), Expr.Symbol(j)) =>
-      Some(knowledge)
+      if i == j then Some(knowledge)
+      else None
     case (Expr.App(lf, la), Expr.App(rf, ra)) =>
       for kf <- unifyWith(lf, rf, knowledge)
           ka <- unifyWith(la, ra, kf)
       yield ka
   end unifyWith
 
-  /*
-   * Trying to unify `V` with `Expr(V, b, c)` should fail as this is equivalent to infinite regress.
+  /**
+   * Trying to unify `$x` with `Expr($x, b, c)` should fail as this is equivalent to infinite regress.
    */
   def bind(v: Int, t: Expr, knowledge: Knowledge): Option[Knowledge] =
     if occursCheck(v, knowledge, t) then
@@ -39,7 +40,7 @@ object Unification:
           unifyWith(t, otherT, knowledge).map(_.modBind(v, t))
   end bind
 
-  /*
+  /**
    * Recursively checks if `v` occurs in `t` using the supplied knowledge.
    */
   def occursCheck(v: Int, knowledge: Knowledge, t: Expr): Boolean =
