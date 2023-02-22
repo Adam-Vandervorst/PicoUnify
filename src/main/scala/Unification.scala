@@ -17,7 +17,7 @@ object Unification:
       bind(i, t2, knowledge)
     case (_, Expr.Var(j)) =>
       bind(j, t1, knowledge)
-    case (Expr.Symbol(i), Expr.Symbol(j)) =>
+    case (Expr.Sym(i), Expr.Sym(j)) =>
       if i == j then Some(knowledge)
       else None
     case (Expr.App(lf, la), Expr.App(rf, ra)) =>

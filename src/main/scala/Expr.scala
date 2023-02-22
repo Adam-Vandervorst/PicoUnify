@@ -2,12 +2,12 @@
  * The main "language" this demo works with.
  *
  * `Var` represents variables and are usually prefixed with `$`, e.g. a function could name an argument `$x`.
- * `Symbol` is used as a placeholder for plain data; you can use arbitrary strings here.
+ * `Sym` is used as a placeholder for plain (symbolic) data; you can use arbitrary strings here.
  * `App` represents the application of a function or constructor `f` and some argument `a`.
  */
 enum Expr:
   case Var(s: Int)
-  case Symbol(s: String)
+  case Sym(s: String)
   case App(f: Expr, a: Expr)
 
 
@@ -29,21 +29,21 @@ object ExprExamples:
    * Example terms, can be used as default names.
    */
   import Expr.*
-  val f: Expr = Symbol("f")
-  val g: Expr = Symbol("g")
-  val h: Expr = Symbol("h")
+  val f: Expr = Sym("f")
+  val g: Expr = Sym("g")
+  val h: Expr = Sym("h")
 
-  val a: Expr = Symbol("a")
-  val b: Expr = Symbol("b")
-  val c: Expr = Symbol("c")
+  val a: Expr = Sym("a")
+  val b: Expr = Sym("b")
+  val c: Expr = Sym("c")
 
-  val A: Expr = Symbol("A")
-  val B: Expr = Symbol("B")
-  val C: Expr = Symbol("C")
+  val A: Expr = Sym("A")
+  val B: Expr = Sym("B")
+  val C: Expr = Sym("C")
 
-  val F: Expr = Symbol("F")
-  val G: Expr = Symbol("G")
-  val H: Expr = Symbol("H")
+  val F: Expr = Sym("F")
+  val G: Expr = Sym("G")
+  val H: Expr = Sym("H")
 
   val $x: Expr = Var(1)
   val $y: Expr = Var(2)
@@ -52,14 +52,3 @@ object ExprExamples:
   val $u: Expr = Var(4)
   val $v: Expr = Var(5)
   val $w: Expr = Var(6)
-
-
-@main def m =
-  import Unification.*
-  import ExprExamples.{f, g, h, a, b, c, $x, $y, $z}
-
-  val ex1 = (Expr($x, $y) unify Expr($y, a)).get
-  val ex2 = (Expr($x, a, $x) unify Expr(Expr(a, b), $y, Expr($y, b))).get
-
-  println(ex1)
-  println(ex2)

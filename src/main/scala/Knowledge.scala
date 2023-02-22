@@ -17,7 +17,7 @@ case class Knowledge(map: Map[Int, Expr]):
   private def walk(t: Expr): Option[Expr] = t match
     case Expr.Var(s) => lookup(s)
     case Expr.App(f, a) => Some(Expr.App(walk(f).getOrElse(f), walk(a).getOrElse(a)))
-    case t: Expr.Symbol => Some(t)
+    case t: Expr.Sym => Some(t)
 
 object Knowledge:
   def empty: Knowledge = Knowledge(Map.empty[Int, Expr])
