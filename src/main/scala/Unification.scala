@@ -1,64 +1,39 @@
-object Unification:
-  /**
-   * Unify t1 with t2 assuming no knowledge.
-   */
-  extension (t1: Expr)
-    infix def unify(t2: Expr): Option[Knowledge] =
-      unifyWith(t1, t2, Knowledge.empty)
+import scala.collection.mutable
 
-  /**
-   * Unify t1 with t2 using/improving the passed knowledge.
-   */
-  def unifyWith(t1: Expr, t2: Expr, knowledge: Knowledge): Option[Knowledge] = (t1, t2) match
-    case (Expr.Var(i), Expr.Var(j)) =>
-      if i == j then Some(knowledge) // does global, variable equality
-      else bind(i, t2, knowledge) // left-biased binding
-    case (Expr.Var(i), _) =>
-      bind(i, t2, knowledge)
-    case (_, Expr.Var(j)) =>
-      bind(j, t1, knowledge)
-    case (Expr.Sym(i), Expr.Sym(j)) =>
-      if i == j then Some(knowledge)
-      else None
-    case (Expr.App(lf, la), Expr.App(rf, ra)) =>
-      for kf <- unifyWith(lf, rf, knowledge)
-          ka <- unifyWith(la, ra, kf)
-      yield ka
-  end unifyWith
 
-  /**
-   * Trying to unify `$x` with `Expr($x, b, c)` should fail as this is equivalent to infinite regress.
-   */
-  def bind(v: Int, t: Expr, knowledge: Knowledge): Option[Knowledge] =
-    if occursCheck(v, knowledge, t) then
-      None
-    else
-      knowledge.lookup(v) match
-        case None =>
-          Some(knowledge.modBind(v, t))
-        case Some(otherT) =>
-          unifyWith(t, otherT, knowledge).map(_.modBind(v, t))
-  end bind
+type Knowledge = mutable.Map[Int, Term]
 
-  /**
-   * Recursively checks if `v` occurs in `t` using the supplied knowledge.
-   */
-  def occursCheck(v: Int, knowledge: Knowledge, t: Expr): Boolean =
-    def reachlist(l: List[Int]): List[Int] =
-      l ::: l.flatMap(reachable)
-    def reachable(v: Int): List[Int] =
-      reachlist(knowledge.lookup(v).fold(List.empty)(vars))
+def unify(t1: Term, t2: Term, knowledge: Knowledge = mutable.Map.empty): Option[Knowledge] = {
+  (t1, t2) match {
+    case (Var(n1), Var(n2)) if n1 == n2 => Some(knowledge)
+    case (Var(name), _) => unifyVariable(name, t2, knowledge)
+    case (_, Var(name)) => unifyVariable(name, t1, knowledge)
+    case _ =>
+      if (!t1.constantCompare(t2)) None
+      else {
+        val cs1 = t1.children()
+        val cs2 = t2.children()
+        if (cs1.size != cs2.size) None
+        else (cs1 zip cs2).foldLeft(Option(knowledge)){
+          case (ok, (l, r)) => ok.flatMap(unify(l, r, _))
+        }
+      }
+  }
+}
 
-    // v may be aliased to some other variable
-    val aliased = knowledge.lookup(v) match
-      case Some(Expr.Var(i)) => i
-      case _ => v
+def unifyVariable(v: Int, t: Term, knowledge: Knowledge): Option[Knowledge] = {
+  if (knowledge.contains(v)) unify(knowledge(v), t, knowledge)
+  else t match {
+    case Var(name) if knowledge.contains(name) => unify(new Var(v), knowledge(name), knowledge)
+    case _ if occursCheck(v, t, knowledge) => None
+    case _ => Some(knowledge += (v -> t))
+  }
+}
 
-    reachlist(vars(t)).contains(aliased)
-  end occursCheck
-
-  private def vars(t: Expr): List[Int] = t match
-    case Expr.App(f, a) => vars(f) ::: vars(a)
-    case Expr.Var(i) => i::Nil
-    case _ => Nil
-end Unification
+def occursCheck(v: Int, t: Term, knowledge: Knowledge): Boolean = {
+  t match {
+    case Var(name) if name == v => true
+    case Var(name) if knowledge.contains(name) => occursCheck(v, knowledge(name), knowledge)
+    case _ => t.children().exists(occursCheck(v, _, knowledge))
+  }
+}
